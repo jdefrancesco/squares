@@ -134,7 +134,6 @@ func (g *Game) reset() {
 	g.last = time.Now()
 }
 
-// --- Collisions ---
 
 func squareIntersectsSquare(a, b Entity) bool {
 	ah := a.size / 2
@@ -159,7 +158,6 @@ func circleIntersectsSquare(circle, square Entity) bool {
 	return (dx*dx + dy*dy) <= r*r
 }
 
-// --- Spawning ---
 
 func (g *Game) spawnEntityWithDifficulty(d float64) {
 	edge := rand.Intn(4)
@@ -381,7 +379,6 @@ func (g *Game) Update() error {
 	return nil
 }
 
-// --- HUD (simplified) ---
 
 func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
 	textStr := fmt.Sprintf(
@@ -471,7 +468,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 func (g *Game) Layout(outsideW, outsideH int) (int, int) { return screenW, screenH }
 
-// --- Drawing helpers ---
 
 func drawSquareAA(dst *ebiten.Image, x, y, size float64, c color.RGBA) {
 	img := ebiten.NewImage(int(size), int(size))
