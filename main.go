@@ -18,7 +18,7 @@ const (
 	screenW = 1024
 	screenH = 800
 
-	// Click dash: since player is cursor-locked, dash becomes a brief invincibility burst
+	// Click dash: brief invincibility burst (since player is cursor-locked)
 	dashCooldown    = 0.90
 	dashInvDuration = 0.25
 
@@ -38,8 +38,8 @@ const (
 
 var (
 	hudFace   = basicfont.Face7x13
-	hudColor  = color.RGBA{20, 20, 20, 255}    // dark text
-	hudPanel  = color.RGBA{255, 255, 255, 220} // translucent white panel
+	hudColor  = color.RGBA{20, 20, 20, 255}
+	hudPanel  = color.RGBA{255, 255, 255, 220}
 	hudBorder = color.RGBA{0, 0, 0, 70}
 )
 
@@ -52,11 +52,11 @@ const (
 )
 
 type Entity struct {
-	kind       Kind
-	x, y       float64
-	size       float64 // square: side length, circle: diameter
-	vx, vy     float64
-	col        color.RGBA
+	kind     Kind
+	x, y     float64
+	size     float64
+	vx, vy   float64
+	col      color.RGBA
 }
 
 type Game struct {
@@ -72,12 +72,10 @@ type Game struct {
 	elapsed           float64
 	spawnsSinceEdible int
 
-	// Dash state
 	dashCDLeft   float64
 	dashInvLeft  float64
 	prevMouseBtn bool
 
-	// Booster powerup
 	invincibleLeft float64
 
 	last time.Time
@@ -136,7 +134,7 @@ func (g *Game) reset() {
 	g.last = time.Now()
 }
 
-// --- Collision helpers ---
+// --- Collisions ---
 
 func squareIntersectsSquare(a, b Entity) bool {
 	ah := a.size / 2
@@ -161,7 +159,7 @@ func circleIntersectsSquare(circle, square Entity) bool {
 	return (dx*dx + dy*dy) <= r*r
 }
 
-// --- Spawning with difficulty + fairness ---
+// --- Spawning ---
 
 func (g *Game) spawnEntityWithDifficulty(d float64) {
 	edge := rand.Intn(4)
@@ -209,7 +207,7 @@ func (g *Game) spawnEntityWithDifficulty(d float64) {
 		isEdible := forceEdible || (rand.Float64() < edibleBias)
 
 		if isEdible {
-			size = p * (0.45 + rand.Float64()*0.45) // 0.45p..0.90p
+			size = p * (0.45 + rand.Float64()*0.45)
 			size = math.Max(10, size)
 			g.spawnsSinceEdible = 0
 		} else {
@@ -305,7 +303,7 @@ func (g *Game) Update() error {
 		g.invincibleLeft = math.Max(0, g.invincibleLeft-dt)
 	}
 
-	// Cursor-locked player center (clamped to window to avoid teleport/phantom deaths)
+	// Cursor-locked player (clamped)
 	mx, my := ebiten.CursorPosition()
 	mx = clampInt(mx, 0, screenW-1)
 	my = clampInt(my, 0, screenH-1)
@@ -325,7 +323,7 @@ func (g *Game) Update() error {
 	// Rotation
 	g.angle += playerRotationRate * dt
 
-	// Difficulty ramp + spawn rate
+	// Spawn
 	difficulty := 0.12*g.elapsed + 0.8*float64(g.score)
 	spawnInterval := clamp(0.85-0.0035*difficulty, 0.25, 0.85)
 
@@ -335,13 +333,13 @@ func (g *Game) Update() error {
 		g.spawnEntityWithDifficulty(difficulty)
 	}
 
-	// Slightly forgiving hitbox (optional but helps)
+	// Collision hitbox (slightly forgiving)
 	playerHit := g.player
 	playerHit.size *= 0.90
 
 	inv := (g.invincibleLeft > 0) || (g.dashInvLeft > 0)
 
-	// Update entities + collisions
+	// Move entities + collisions
 	alive := g.ents[:0]
 	for _, e := range g.ents {
 		e.x += e.vx * dt
@@ -354,28 +352,24 @@ func (g *Game) Update() error {
 		switch e.kind {
 		case KindSquare:
 			if squareIntersectsSquare(playerHit, e) {
-				// Eat if smaller OR invincible (invincible lets you eat anything)
 				if inv || g.player.size > e.size {
 					g.score++
 					g.player.size += growthScale*e.size + growthFlat
 					g.spawnsSinceEdible = 0
 					continue
 				}
-				// Otherwise: die immediately
 				g.gameOver = true
 			}
 
 		case KindCircleHazard:
-			if circleIntersectsSquare(e, playerHit) {
-				if !inv {
-					g.gameOver = true
-				}
+			if circleIntersectsSquare(e, playerHit) && !inv {
+				g.gameOver = true
 			}
 
 		case KindCircleBoost:
 			if circleIntersectsSquare(e, playerHit) {
 				g.invincibleLeft = invincibleDuration
-				g.dashInvLeft = 0 // booster overrides dash burst
+				g.dashInvLeft = 0
 				continue
 			}
 		}
@@ -387,14 +381,21 @@ func (g *Game) Update() error {
 	return nil
 }
 
-// --- HUD with text.Draw ---
+// --- HUD (simplified) ---
 
-func measureHUD(textStr string) (lines int, maxLen int) {
-	lines = 1
+func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
+	textStr := fmt.Sprintf(
+		"Squares eaten: %d\nInvincible: %.1fs\n\nGreen circle: invincibility\nBlue circle: instant death",
+		score,
+		math.Max(0, invLeft),
+	)
+
+	// simple sizing
+	lines := 5
+	maxLen := 0
 	cur := 0
 	for _, r := range textStr {
 		if r == '\n' {
-			lines++
 			if cur > maxLen {
 				maxLen = cur
 			}
@@ -406,11 +407,6 @@ func measureHUD(textStr string) (lines int, maxLen int) {
 	if cur > maxLen {
 		maxLen = cur
 	}
-	return
-}
-
-func drawHUD(screen *ebiten.Image, x, y int, textStr string) {
-	lines, maxLen := measureHUD(textStr)
 
 	pad := 10
 	w := pad*2 + maxLen*7
@@ -422,13 +418,13 @@ func drawHUD(screen *ebiten.Image, x, y int, textStr string) {
 	op.GeoM.Translate(float64(x), float64(y))
 	screen.DrawImage(panel, op)
 
-	// Border
+	// border
 	drawRect(screen, x, y, w, 1, hudBorder)
 	drawRect(screen, x, y+h-1, w, 1, hudBorder)
 	drawRect(screen, x, y, 1, h, hudBorder)
 	drawRect(screen, x+w-1, y, 1, h, hudBorder)
 
-	// Text + shadow
+	// text + shadow
 	text.Draw(screen, textStr, hudFace, x+pad+1, y+pad+13+1, color.RGBA{0, 0, 0, 90})
 	text.Draw(screen, textStr, hudFace, x+pad, y+pad+13, hudColor)
 }
@@ -452,7 +448,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	// Rings for state
+	// rings for invincibility states
 	if g.invincibleLeft > 0 {
 		drawRing(screen, float32(g.player.x), float32(g.player.y), float32(g.player.size*0.80), 4, color.RGBA{40, 180, 80, 220})
 	} else if g.dashInvLeft > 0 {
@@ -461,19 +457,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	drawRotatedSquare(screen, g.player.x, g.player.y, g.player.size, g.angle, g.player.col)
 
-	difficulty := 0.12*g.elapsed + 0.8*float64(g.score)
-	spawnInterval := clamp(0.85-0.0035*difficulty, 0.25, 0.85)
-
-	hud := fmt.Sprintf(
-		"Squares eaten: %d\nSize: %.1f\nCenter = Cursor (clamped)\nDash: Click = brief invincibility (CD: %.1fs)\nInvincible: %.1fs\nDash i-frames: %.2fs\nDifficulty: %.1f  Spawn: %.2fs\nGrowth: %.2f*eaten + %.2f\nGreen circles = power-up\nBlue circles = hazard\nR = restart (on death)",
-		g.score, g.player.size,
-		math.Max(0, g.dashCDLeft),
-		math.Max(0, g.invincibleLeft),
-		math.Max(0, g.dashInvLeft),
-		difficulty, spawnInterval,
-		growthScale, growthFlat,
-	)
-	drawHUD(screen, 12, 12, hud)
+	// show invincibility time remaining (include dash burst)
+	invLeft := g.invincibleLeft
+	if g.dashInvLeft > invLeft {
+		invLeft = g.dashInvLeft
+	}
+	drawHUD(screen, 12, 12, g.score, invLeft)
 
 	if g.gameOver {
 		text.Draw(screen, "GAME OVER\nPress R to restart", hudFace, screenW/2-90, screenH/2, color.RGBA{20, 20, 20, 255})
