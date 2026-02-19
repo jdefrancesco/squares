@@ -28,6 +28,10 @@ type Game struct {
 
 	invincibleLeft float64
 
+	paused     bool
+	prevPKey   bool
+	prevEscKey bool
+
 	last time.Time
 }
 
@@ -61,6 +65,10 @@ func (g *Game) reset() {
 
 	g.invincibleLeft = 0
 
+	g.paused = false
+	g.prevPKey = false
+	g.prevEscKey = false
+
 	g.last = time.Now()
 }
 
@@ -79,6 +87,34 @@ func (g *Game) Update() error {
 		return nil
 	}
 
+	mx, my := ebiten.CursorPosition()
+	mx = clampInt(mx, 0, ScreenWidth-1)
+	my = clampInt(my, 0, ScreenHeight-1)
+
+	mouseDown := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
+	clicked := mouseDown && !g.prevMouseBtn
+	g.prevMouseBtn = mouseDown
+
+	pauseX, pauseY, pauseW, pauseH := pauseButtonRect()
+	clickedPause := clicked && mx >= pauseX && mx < pauseX+pauseW && my >= pauseY && my < pauseY+pauseH
+
+	pDown := ebiten.IsKeyPressed(ebiten.KeyP)
+	escDown := ebiten.IsKeyPressed(ebiten.KeyEscape)
+	pressedPauseKey := (pDown && !g.prevPKey) || (escDown && !g.prevEscKey)
+	g.prevPKey = pDown
+	g.prevEscKey = escDown
+
+	if clickedPause || pressedPauseKey {
+		g.paused = !g.paused
+		g.last = now
+		return nil
+	}
+
+	if g.paused {
+		g.last = now
+		return nil
+	}
+
 	g.elapsed += dt
 
 	if g.dashCDLeft > 0 {
@@ -91,17 +127,10 @@ func (g *Game) Update() error {
 		g.invincibleLeft = math.Max(0, g.invincibleLeft-dt)
 	}
 
-	mx, my := ebiten.CursorPosition()
-	mx = clampInt(mx, 0, ScreenWidth-1)
-	my = clampInt(my, 0, ScreenHeight-1)
 	g.player.x = float64(mx)
 	g.player.y = float64(my)
 
-	mouseDown := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
-	clicked := mouseDown && !g.prevMouseBtn
-	g.prevMouseBtn = mouseDown
-
-	if clicked && g.dashCDLeft <= 0 {
+	if clicked && !clickedPause && g.dashCDLeft <= 0 {
 		g.dashCDLeft = dashCooldown
 		g.dashInvLeft = dashInvDuration
 	}
@@ -187,6 +216,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		invLeft = g.dashInvLeft
 	}
 	drawHUD(screen, 12, 12, g.score, invLeft)
+	if !g.gameOver {
+		drawPauseButton(screen, g.paused)
+		if g.paused {
+			drawPauseOverlay(screen)
+		}
+	}
 
 	if g.gameOver {
 		text.Draw(screen, "GAME OVER\nPress R to restart", hudFace, ScreenWidth/2-90, ScreenHeight/2, color.RGBA{20, 20, 20, 255})
