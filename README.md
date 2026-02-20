@@ -27,7 +27,7 @@ Squares and circles spawn from the edges and drift toward you as the difficulty 
 
 ## Run / Build
 
-Requires Go and a working graphics environment supported by Ebiten.
+Requires Go and a working graphics environment supported by [Ebiten](https://ebitengine.org/).
 
 Run directly:
 
@@ -42,7 +42,6 @@ make build
 ./bin/squares
 ```
 
-## Screenshots 
+## Screenshots
 
 TODO
-

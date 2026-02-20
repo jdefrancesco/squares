@@ -30,7 +30,7 @@ func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
 		{label: "Quit:", value: "q"},
 		{},
 		{label: "Green circle:", value: "invincibility"},
-		{label: "Black circle:", value: "instant death"},
+		{label: "Black circle:", value: "loss"},
 	}
 
 	lineHeight := hudFace.Metrics().Height.Ceil()
