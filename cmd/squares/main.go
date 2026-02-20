@@ -2,8 +2,6 @@ package main
 
 import (
 	"log"
-	"math/rand"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
@@ -11,12 +9,13 @@ import (
 )
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
-
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
 	ebiten.SetWindowTitle("Squares")
 
 	if err := ebiten.RunGame(game.New()); err != nil {
+		if err == ebiten.Termination {
+			return
+		}
 		log.Fatal(err)
 	}
 }

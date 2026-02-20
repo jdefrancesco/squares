@@ -8,6 +8,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+var whitePixel = func() *ebiten.Image {
+	img := ebiten.NewImage(1, 1)
+	img.Fill(color.White)
+	return img
+}()
+
 func drawSquareAA(dst *ebiten.Image, x, y, size float64, c color.RGBA) {
 	img := ebiten.NewImage(int(size), int(size))
 	img.Fill(c)
@@ -38,7 +44,7 @@ func drawFilledCircle(dst *ebiten.Image, x, y, r float32, c color.RGBA) {
 		vs[i].ColorB = float32(c.B) / 255
 		vs[i].ColorA = float32(c.A) / 255
 	}
-	dst.DrawTriangles(vs, is, ebiten.NewImage(1, 1), nil)
+	dst.DrawTriangles(vs, is, whitePixel, nil)
 }
 
 func drawRing(dst *ebiten.Image, x, y, r float32, thickness float32, c color.RGBA) {
@@ -54,5 +60,5 @@ func drawRing(dst *ebiten.Image, x, y, r float32, thickness float32, c color.RGB
 		vs[i].ColorB = float32(c.B) / 255
 		vs[i].ColorA = float32(c.A) / 255
 	}
-	dst.DrawTriangles(vs, is, ebiten.NewImage(1, 1), nil)
+	dst.DrawTriangles(vs, is, whitePixel, nil)
 }

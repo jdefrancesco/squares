@@ -31,6 +31,7 @@ type Game struct {
 	paused     bool
 	prevPKey   bool
 	prevEscKey bool
+	prevQKey   bool
 
 	last time.Time
 }
@@ -68,6 +69,7 @@ func (g *Game) reset() {
 	g.paused = false
 	g.prevPKey = false
 	g.prevEscKey = false
+	g.prevQKey = false
 
 	g.last = time.Now()
 }
@@ -79,6 +81,13 @@ func (g *Game) Update() error {
 		dt = 0.05
 	}
 	g.last = now
+
+	qDown := ebiten.IsKeyPressed(ebiten.KeyQ)
+	pressedQuitKey := qDown && !g.prevQKey
+	g.prevQKey = qDown
+	if pressedQuitKey {
+		return ebiten.Termination
+	}
 
 	if g.gameOver {
 		if ebiten.IsKeyPressed(ebiten.KeyR) {
@@ -95,16 +104,13 @@ func (g *Game) Update() error {
 	clicked := mouseDown && !g.prevMouseBtn
 	g.prevMouseBtn = mouseDown
 
-	pauseX, pauseY, pauseW, pauseH := pauseButtonRect()
-	clickedPause := clicked && mx >= pauseX && mx < pauseX+pauseW && my >= pauseY && my < pauseY+pauseH
-
 	pDown := ebiten.IsKeyPressed(ebiten.KeyP)
 	escDown := ebiten.IsKeyPressed(ebiten.KeyEscape)
 	pressedPauseKey := (pDown && !g.prevPKey) || (escDown && !g.prevEscKey)
 	g.prevPKey = pDown
 	g.prevEscKey = escDown
 
-	if clickedPause || pressedPauseKey {
+	if pressedPauseKey {
 		g.paused = !g.paused
 		g.last = now
 		return nil
@@ -130,7 +136,7 @@ func (g *Game) Update() error {
 	g.player.x = float64(mx)
 	g.player.y = float64(my)
 
-	if clicked && !clickedPause && g.dashCDLeft <= 0 {
+	if clicked && g.dashCDLeft <= 0 {
 		g.dashCDLeft = dashCooldown
 		g.dashInvLeft = dashInvDuration
 	}
@@ -173,7 +179,7 @@ func (g *Game) Update() error {
 			}
 
 		case KindCircleHazard:
-			if circleIntersectsSquare(e, playerHit) && !inv {
+			if circleIntersectsSquare(e, playerHit) {
 				g.gameOver = true
 			}
 
@@ -217,7 +223,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	drawHUD(screen, 12, 12, g.score, invLeft)
 	if !g.gameOver {
-		drawPauseButton(screen, g.paused)
 		if g.paused {
 			drawPauseOverlay(screen)
 		}

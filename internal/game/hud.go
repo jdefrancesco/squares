@@ -17,33 +17,43 @@ var (
 	hudBorder = color.RGBA{0, 0, 0, 70}
 )
 
-func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
-	textStr := fmt.Sprintf(
-		"Squares eaten: %d\nInvincible: %.1fs\n\nGreen circle: invincibility\nBlue circle: instant death",
-		score,
-		math.Max(0, invLeft),
-	)
+type hudLine struct {
+	label string
+	value string
+}
 
-	lines := 5
-	maxLen := 0
-	cur := 0
-	for _, r := range textStr {
-		if r == '\n' {
-			if cur > maxLen {
-				maxLen = cur
-			}
-			cur = 0
-		} else {
-			cur++
-		}
+func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
+	lines := []hudLine{
+		{label: "Squares eaten:", value: fmt.Sprintf("%d", score)},
+		{label: "Invincible:", value: fmt.Sprintf("%.1fs", math.Max(0, invLeft))},
+		{label: "Pause:", value: "p"},
+		{label: "Quit:", value: "q"},
+		{},
+		{label: "Green circle:", value: "invincibility"},
+		{label: "Black circle:", value: "instant death"},
 	}
-	if cur > maxLen {
-		maxLen = cur
+
+	lineHeight := hudFace.Metrics().Height.Ceil()
+	ascent := hudFace.Metrics().Ascent.Ceil()
+
+	maxW := 0
+	for _, line := range lines {
+		if line.label == "" && line.value == "" {
+			continue
+		}
+		full := line.label
+		if line.value != "" {
+			full = line.label + " " + line.value
+		}
+		b := text.BoundString(hudFace, full)
+		if b.Dx() > maxW {
+			maxW = b.Dx()
+		}
 	}
 
 	pad := 10
-	w := pad*2 + maxLen*7
-	h := pad*2 + lines*13
+	w := pad*2 + maxW
+	h := pad*2 + len(lines)*lineHeight
 
 	panel := ebiten.NewImage(w, h)
 	panel.Fill(hudPanel)
@@ -56,43 +66,29 @@ func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
 	drawRect(screen, x, y, 1, h, hudBorder)
 	drawRect(screen, x+w-1, y, 1, h, hudBorder)
 
-	text.Draw(screen, textStr, hudFace, x+pad+1, y+pad+13+1, color.RGBA{0, 0, 0, 90})
-	text.Draw(screen, textStr, hudFace, x+pad, y+pad+13, hudColor)
-}
+	labelCol := color.RGBA{5, 5, 5, 255}
+	valueCol := color.RGBA{35, 35, 35, 255}
+	shadowCol := color.RGBA{0, 0, 0, 70}
 
-func pauseButtonRect() (x, y, w, h int) {
-	pad := 12
-	w = 96
-	h = 26
-	x = ScreenWidth - pad - w
-	y = pad
-	return
-}
+	baseY := y + pad + ascent
+	for i, line := range lines {
+		if line.label == "" && line.value == "" {
+			continue
+		}
 
-func drawPauseButton(screen *ebiten.Image, paused bool) {
-	x, y, w, h := pauseButtonRect()
+		ly := baseY + i*lineHeight
+		x0 := x + pad
 
-	mx, my := ebiten.CursorPosition()
-	mx = clampInt(mx, 0, ScreenWidth-1)
-	my = clampInt(my, 0, ScreenHeight-1)
-	hover := mx >= x && mx < x+w && my >= y && my < y+h
+		// Label: simulate bold by drawing twice with a 1px offset.
+		text.Draw(screen, line.label, hudFace, x0+1, ly+1, shadowCol)
+		text.Draw(screen, line.label, hudFace, x0, ly, labelCol)
+		text.Draw(screen, line.label, hudFace, x0+1, ly, labelCol)
 
-	bg := color.RGBA{255, 255, 255, 235}
-	if hover {
-		bg = color.RGBA{250, 250, 250, 245}
+		if line.value != "" {
+			labelW := text.BoundString(hudFace, line.label+" ").Dx()
+			text.Draw(screen, line.value, hudFace, x0+labelW, ly, valueCol)
+		}
 	}
-
-	drawRect(screen, x, y, w, h, bg)
-	drawRect(screen, x, y, w, 1, hudBorder)
-	drawRect(screen, x, y+h-1, w, 1, hudBorder)
-	drawRect(screen, x, y, 1, h, hudBorder)
-	drawRect(screen, x+w-1, y, 1, h, hudBorder)
-
-	label := "Pause"
-	if paused {
-		label = "Resume"
-	}
-	text.Draw(screen, label, hudFace, x+12, y+18, hudColor)
 }
 
 func drawPauseOverlay(screen *ebiten.Image) {
