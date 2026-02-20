@@ -42,6 +42,41 @@ make build
 ./bin/squares
 ```
 
+## macOS App Bundle
+
+You can build a proper macOS `.app` bundle (so it shows up like a normal app in Finder / Launchpad):
+
+```sh
+make macos-app
+open dist/Squares.app
+```
+
+You can override the bundle id and version:
+
+```sh
+make macos-app BUNDLE_ID=com.yourname.squares VERSION=1.0.0
+```
+
+### App icon
+
+To include a Dock/Finder icon, add a 1024×1024 PNG at:
+
+`assets/icon.png`
+
+If you just want a reasonable placeholder icon quickly, generate one:
+
+```sh
+make icon
+```
+
+Then re-run `make macos-app`. The build script will generate an `.icns` and place it inside the app bundle.
+
+If `assets/icon.png` is missing, the app will still build but will use the default generic icon.
+
+### Notes on distribution
+
+For distributing to other machines without Gatekeeper warnings, you typically need to code-sign and notarize the `.app` using an Apple Developer ID certificate. This repo currently only creates the unsigned `.app` bundle.
+
 ## Screenshots
 
 TODO
