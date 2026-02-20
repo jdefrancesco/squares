@@ -8,6 +8,7 @@ const (
 	dashCooldown    = 0.90
 	dashInvDuration = 0.25
 
+	// Might make this more dynamic. Giving different durations invincible.
 	invincibleDuration = 2.5
 
 	maxSpawnsWithoutEdible = 6

@@ -210,7 +210,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	if g.invincibleLeft > 0 {
-		drawRing(screen, float32(g.player.x), float32(g.player.y), float32(g.player.size*0.80), 4, color.RGBA{40, 180, 80, 220})
+		drawRing(screen, float32(g.player.x), float32(g.player.y), float32(g.player.size*0.80), 4, color.RGBA{40, 150, 165, 220})
 	} else if g.dashInvLeft > 0 {
 		drawRing(screen, float32(g.player.x), float32(g.player.y), float32(g.player.size*0.75), 3, color.RGBA{120, 120, 120, 200})
 	}

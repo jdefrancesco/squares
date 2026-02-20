@@ -106,7 +106,7 @@ func (g *Game) spawnEntityWithDifficulty(d float64) {
 	case KindCircleHazard:
 		col = color.RGBA{15, 15, 15, 255}
 	case KindCircleBoost:
-		col = color.RGBA{40, 180, 80, 255}
+		col = color.RGBA{40, 150, 165, 255}
 	}
 
 	g.ents = append(g.ents, Entity{
