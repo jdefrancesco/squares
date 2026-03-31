@@ -1,26 +1,14 @@
 package game
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
+
+
+// TestClamp tests Clamp generic method.
 func TestClamp(t *testing.T) {
-	cases := []struct {
-		name      string
-		v, lo, hi float64
-		want      float64
-	}{
-		{"below", -1, 0, 10, 0},
-		{"inside", 5, 0, 10, 5},
-		{"above", 11, 0, 10, 10},
-	}
-
-	for _, tc := range cases {
-		if got := clamp(tc.v, tc.lo, tc.hi); got != tc.want {
-			t.Fatalf("%s: clamp(%v,%v,%v)=%v want %v", tc.name, tc.v, tc.lo, tc.hi, got, tc.want)
-		}
-	}
-}
-
-func TestClampInt(t *testing.T) {
 	cases := []struct {
 		name      string
 		v, lo, hi int
@@ -32,8 +20,25 @@ func TestClampInt(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		if got := clampInt(tc.v, tc.lo, tc.hi); got != tc.want {
-			t.Fatalf("%s: clampInt(%v,%v,%v)=%v want %v", tc.name, tc.v, tc.lo, tc.hi, got, tc.want)
+		if got := clamp(tc.v, tc.lo, tc.hi); got != tc.want {
+			t.Fatalf("%s: clamp(%v,%v,%v)=%v want %v", tc.name, tc.v, tc.lo, tc.hi, got, tc.want)
+		}
+	}
+
+	casesFloats := []struct {
+		name      string
+		v, lo, hi float64
+		want      float64
+	}{
+		{"below", -1, 0, 10, 0},
+		{"inside", 5, 0, 10, 5},
+		{"above", 11, 0, 10, 10},
+	}
+
+	fmt.Println("Now running float clamp test")
+	for _, tc := range casesFloats  {
+		if got := clamp(tc.v, tc.lo, tc.hi); got != tc.want {
+			t.Fatalf("%s: clamp(%v,%v,%v)=%v want %v", tc.name, tc.v, tc.lo, tc.hi, got, tc.want)
 		}
 	}
 }

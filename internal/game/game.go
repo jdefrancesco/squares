@@ -97,8 +97,8 @@ func (g *Game) Update() error {
 	}
 
 	mx, my := ebiten.CursorPosition()
-	mx = clampInt(mx, 0, ScreenWidth-1)
-	my = clampInt(my, 0, ScreenHeight-1)
+	mx = clamp(mx, 0, ScreenWidth-1)
+	my = clamp(my, 0, ScreenHeight-1)
 
 	mouseDown := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 	clicked := mouseDown && !g.prevMouseBtn

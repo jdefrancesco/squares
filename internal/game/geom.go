@@ -2,24 +2,16 @@ package game
 
 import "math"
 
-func clamp(v, lo, hi float64) float64 {
-	if v < lo {
-		return lo
-	}
-	if v > hi {
-		return hi
-	}
-	return v
+// Number is a constraint that permits any numeric type
+type Number interface {
+    ~int | ~int8 | ~int16 | ~int32 | ~int64 |
+    ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
+    ~float32 | ~float64
 }
 
-func clampInt(v, lo, hi int) int {
-	if v < lo {
-		return lo
-	}
-	if v > hi {
-		return hi
-	}
-	return v
+// Clamp returns value clamped to the range [low, high]
+func clamp[T Number](value, low, high T) T {
+    return max(low, min(value, high))
 }
 
 func squareIntersectsSquare(a, b Entity) bool {
