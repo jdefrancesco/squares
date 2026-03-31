@@ -2,8 +2,10 @@ package game
 
 const (
 	// Control size of window. The bigger the less challeging in general.
-	ScreenWidth  = 800
-	ScreenHeight = 600
+	// ScreenWidth  = 800
+	// ScreenHeight = 600
+	ScreenWidth  = 640
+	ScreenHeight = 480
 
 	dashCooldown    = 0.90
 	dashInvDuration = 0.25
