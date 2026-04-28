@@ -50,7 +50,7 @@ func (g *Game) reset() {
 		x:    ScreenWidth / 2,
 		y:    ScreenHeight / 2,
 		size: 22,
-		col:  color.RGBA{0, 0, 0, 255},
+		col:  color.RGBA{35, 145, 85, 255},
 	}
 	g.angle = 0
 	g.score = 0

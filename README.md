@@ -7,7 +7,7 @@
 
 Squares and circles spawn from the edges and drift toward you as the difficulty ramps up.
 
-- You are the rotating black square in the center.
+- You are the rotating green square in the center.
 - Move your square with the mouse.
 - Eat smaller squares to grow and increase your score.
 - Hitting a larger square ends the game.
