@@ -29,11 +29,8 @@ func TestSpawnForceEdibleAlwaysSquare(t *testing.T) {
 	if e.col.A != 255 {
 		t.Fatalf("expected alpha=255, got %d", e.col.A)
 	}
-	if e.col.R != e.col.G || e.col.G != e.col.B {
-		t.Fatalf("expected square color to be grayscale, got %+v", e.col)
-	}
-	if e.col.R < 60 || e.col.R > 209 {
-		t.Fatalf("expected grayscale value in [60,209], got %d", e.col.R)
+	if e.col.R != 0 || e.col.G != 0 || e.col.B != 0 {
+		t.Fatalf("expected square color to be black, got %+v", e.col)
 	}
 
 	// Forced-edible squares should be smaller than the player.

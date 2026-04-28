@@ -101,8 +101,7 @@ func (g *Game) spawnEntityWithDifficulty(d float64) {
 	var col color.RGBA
 	switch kind {
 	case KindSquare:
-		c := uint8(60 + rand.Intn(150))
-		col = color.RGBA{c, c, c, 255}
+		col = color.RGBA{0, 0, 0, 255}
 	case KindCircleHazard:
 		col = color.RGBA{15, 15, 15, 255}
 	case KindCircleBoost:
