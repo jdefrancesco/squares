@@ -23,9 +23,6 @@ func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
 	lines := []hudLine{
 		{label: "Score:", value: fmt.Sprintf("%d", score)},
 		{label: "Invincible:", value: fmt.Sprintf("%.1fs", math.Max(0, invLeft))},
-		{},
-		{label: "Green:", value: "invincibility"},
-		{label: "Black:", value: "loss"},
 	}
 
 	lineHeight := hudFace.Metrics().Height.Ceil()
@@ -56,6 +53,26 @@ func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
 			text.Draw(screen, line.value, hudFace, x0+labelW, ly, valueCol)
 		}
 	}
+}
+
+func drawTopPopup(screen *ebiten.Image, msg string, left, total float64) {
+	if msg == "" || left <= 0 || total <= 0 {
+		return
+	}
+
+	alpha := left / total
+	if alpha > 1 {
+		alpha = 1
+	}
+
+	b := text.BoundString(hudFace, msg)
+	x := (ScreenWidth - b.Dx()) / 2
+	y := 24
+
+	labelCol := color.RGBA{20, 20, 20, uint8(235 * alpha)}
+	shadowCol := color.RGBA{0, 0, 0, uint8(90 * alpha)}
+	text.Draw(screen, msg, hudFace, x+1, y+1, shadowCol)
+	text.Draw(screen, msg, hudFace, x, y, labelCol)
 }
 
 func drawPauseOverlay(screen *ebiten.Image) {

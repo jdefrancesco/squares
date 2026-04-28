@@ -27,6 +27,8 @@ type Game struct {
 	prevMouseBtn bool
 
 	invincibleLeft float64
+	popupText      string
+	popupLeft      float64
 
 	paused     bool
 	prevPKey   bool
@@ -65,6 +67,8 @@ func (g *Game) reset() {
 	g.prevMouseBtn = false
 
 	g.invincibleLeft = 0
+	g.popupText = ""
+	g.popupLeft = 0
 
 	g.paused = false
 	g.prevPKey = false
@@ -132,6 +136,9 @@ func (g *Game) Update() error {
 	if g.invincibleLeft > 0 {
 		g.invincibleLeft = math.Max(0, g.invincibleLeft-dt)
 	}
+	if g.popupLeft > 0 {
+		g.popupLeft = math.Max(0, g.popupLeft-dt)
+	}
 
 	g.player.x = float64(mx)
 	g.player.y = float64(my)
@@ -187,6 +194,8 @@ func (g *Game) Update() error {
 			if circleIntersectsSquare(e, playerHit) {
 				g.invincibleLeft = invincibleDuration
 				g.dashInvLeft = 0
+				g.popupText = "INVINCIBLE"
+				g.popupLeft = invinciblePopupDur
 				continue
 			}
 		}
@@ -222,6 +231,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		invLeft = g.dashInvLeft
 	}
 	drawHUD(screen, 12, 12, g.score, invLeft)
+	drawTopPopup(screen, g.popupText, g.popupLeft, invinciblePopupDur)
 	if !g.gameOver {
 		if g.paused {
 			drawPauseOverlay(screen)

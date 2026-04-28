@@ -12,6 +12,7 @@ const (
 
 	// Might make this more dynamic. Giving different durations invincible.
 	invincibleDuration = 2.5
+	invinciblePopupDur = 1.2
 
 	maxSpawnsWithoutEdible = 6
 	playerRotationRate     = 6.0
