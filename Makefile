@@ -7,14 +7,17 @@ APP_NAME := Squares
 BUNDLE_ID ?= com.example.squares
 VERSION ?= 0.1.0
 
-.PHONY: build clean macos-app macos-app-clean icon
+.PHONY: build test clean macos-app macos-app-clean icon
 
 build:
 	@mkdir -p $(BIN_DIR)
 	go build -o $(BIN_DIR)/$(BINARY) $(CMD)
 
+test:
+	go test ./...
+
 clean:
-	rm -rf $(BIN_DIR)
+	rm -rf $(BIN_DIR) $(DIST_DIR)/$(APP_NAME).app
 
 macos-app:
 	@mkdir -p $(DIST_DIR)
