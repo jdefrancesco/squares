@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 )
 
+// main parses the icon path and size, renders the artwork, and writes a PNG,
+// creating the output directory when needed.
 func main() {
 	outPath := flag.String("o", "assets/icon.png", "output PNG path (should be 1024x1024)")
 	size := flag.Int("s", 1024, "icon size in pixels")
@@ -68,6 +70,7 @@ func main() {
 	fmt.Println("wrote", *outPath)
 }
 
+// fill sets every pixel in img to c without blending.
 func fill(img *image.NRGBA, c color.NRGBA) {
 	b := img.Bounds()
 	for y := b.Min.Y; y < b.Max.Y; y++ {
@@ -82,6 +85,8 @@ func fill(img *image.NRGBA, c color.NRGBA) {
 	}
 }
 
+// addRadialShade overlays a vignette whose opacity increases with distance from
+// the image center, reaching shade.A at the corners.
 func addRadialShade(img *image.NRGBA, shade color.NRGBA) {
 	b := img.Bounds()
 	cx := float64(b.Dx()) / 2
@@ -98,6 +103,8 @@ func addRadialShade(img *image.NRGBA, shade color.NRGBA) {
 	}
 }
 
+// drawRotSquare blends a square centered at (cx, cy), rotated by angle radians,
+// by testing pixels in its bounding box against the square's local coordinates.
 func drawRotSquare(img *image.NRGBA, cx, cy, size, angle float64, c color.NRGBA) {
 	h := size / 2
 	cosA := math.Cos(angle)
@@ -138,6 +145,8 @@ func drawRotSquare(img *image.NRGBA, cx, cy, size, angle float64, c color.NRGBA)
 	}
 }
 
+// drawRing blends a ring centered at (cx, cy), with the supplied outer radius
+// and an inner radius of max(0, radius-thickness).
 func drawRing(img *image.NRGBA, cx, cy, radius, thickness float64, c color.NRGBA) {
 	rOuter := radius
 	rInner := math.Max(0, radius-thickness)
@@ -175,6 +184,8 @@ func drawRing(img *image.NRGBA, cx, cy, radius, thickness float64, c color.NRGBA
 	}
 }
 
+// blendOver composites src over the existing pixel at (x, y) using
+// non-premultiplied alpha. Coordinates must be valid for img.
 func blendOver(img *image.NRGBA, x, y int, src color.NRGBA) {
 	i := y*img.Stride + x*4
 	dr := img.Pix[i+0]
@@ -193,6 +204,7 @@ func blendOver(img *image.NRGBA, x, y int, src color.NRGBA) {
 		return
 	}
 
+	// Round computed channels and keep them within the byte range.
 	toByte := func(v float64) uint8 {
 		v = math.Round(v)
 		if v < 0 {
@@ -215,6 +227,7 @@ func blendOver(img *image.NRGBA, x, y int, src color.NRGBA) {
 	img.Pix[i+3] = toByte(outA * 255.0)
 }
 
+// clamp01 limits v to the inclusive range [0, 1].
 func clamp01(v float64) float64 {
 	if v < 0 {
 		return 0
@@ -224,4 +237,3 @@ func clamp01(v float64) float64 {
 	}
 	return v
 }
-

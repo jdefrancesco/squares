@@ -19,6 +19,8 @@ type hudLine struct {
 	value string
 }
 
+// drawHUD displays the score and remaining square-protection time, in seconds,
+// with padding from the supplied top-left position.
 func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
 	lines := []hudLine{
 		{label: "Score:", value: fmt.Sprintf("%d", score)},
@@ -55,6 +57,8 @@ func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
 	}
 }
 
+// drawTopPopup centers msg near the top of the screen and fades it as left
+// seconds count down from total. Empty or expired messages are not drawn.
 func drawTopPopup(screen *ebiten.Image, msg string, left, total float64) {
 	if msg == "" || left <= 0 || total <= 0 {
 		return
@@ -75,6 +79,7 @@ func drawTopPopup(screen *ebiten.Image, msg string, left, total float64) {
 	text.Draw(screen, msg, hudFace, x, y, labelCol)
 }
 
+// drawPauseOverlay dims the playfield and displays the pause and resume prompt.
 func drawPauseOverlay(screen *ebiten.Image) {
 	overlay := ebiten.NewImage(ScreenWidth, ScreenHeight)
 	overlay.Fill(color.RGBA{0, 0, 0, 70})

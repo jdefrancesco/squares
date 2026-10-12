@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+// TestSpawnForceEdibleAlwaysSquare checks that forcing an edible spawn appends a
+// smaller black square and resets the non-edible spawn counter.
 func TestSpawnForceEdibleAlwaysSquare(t *testing.T) {
 	rand.Seed(1)
 
@@ -42,6 +44,8 @@ func TestSpawnForceEdibleAlwaysSquare(t *testing.T) {
 	}
 }
 
+// TestSpawnCircleKindsAndColorsAppear checks that both circle kinds can spawn
+// and use their expected boost and hazard colors.
 func TestSpawnCircleKindsAndColorsAppear(t *testing.T) {
 	rand.Seed(2)
 
@@ -83,6 +87,8 @@ func TestSpawnCircleKindsAndColorsAppear(t *testing.T) {
 	}
 }
 
+// TestSpawnVelocityHasReasonableMagnitude checks that a high-difficulty spawn
+// has positive speed within a generous bound.
 func TestSpawnVelocityHasReasonableMagnitude(t *testing.T) {
 	rand.Seed(3)
 

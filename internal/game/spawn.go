@@ -6,6 +6,10 @@ import (
 	"math/rand"
 )
 
+// spawnEntityWithDifficulty appends a randomly sized square or circle outside a
+// random screen edge. Difficulty adjusts kind probabilities, square sizes, and
+// speed; after too many non-edible spawns, a smaller square is forced. Velocity
+// aims roughly at the player's current position and stays fixed after spawning.
 func (g *Game) spawnEntityWithDifficulty(d float64) {
 	edge := rand.Intn(4)
 	margin := 50.0

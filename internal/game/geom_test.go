@@ -5,9 +5,7 @@ import (
 	"testing"
 )
 
-
-
-// TestClamp tests Clamp generic method.
+// TestClamp checks clamping below, inside, and above integer and float bounds.
 func TestClamp(t *testing.T) {
 	cases := []struct {
 		name      string
@@ -36,13 +34,14 @@ func TestClamp(t *testing.T) {
 	}
 
 	fmt.Println("Now running float clamp test")
-	for _, tc := range casesFloats  {
+	for _, tc := range casesFloats {
 		if got := clamp(tc.v, tc.lo, tc.hi); got != tc.want {
 			t.Fatalf("%s: clamp(%v,%v,%v)=%v want %v", tc.name, tc.v, tc.lo, tc.hi, got, tc.want)
 		}
 	}
 }
 
+// TestSquareIntersectsSquare checks overlap, edge contact, and separation.
 func TestSquareIntersectsSquare(t *testing.T) {
 	a := Entity{x: 0, y: 0, size: 10}
 
@@ -62,6 +61,7 @@ func TestSquareIntersectsSquare(t *testing.T) {
 	}
 }
 
+// TestCircleIntersectsSquare checks containment, separation, and tangency.
 func TestCircleIntersectsSquare(t *testing.T) {
 	sq := Entity{x: 0, y: 0, size: 2} // bounds [-1,1]
 

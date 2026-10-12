@@ -25,14 +25,18 @@ GOFLAGS="${GOFLAGS:-}"
 LDFLAGS="${LDFLAGS:--s -w}"
 CGO_ENABLED_VALUE="${CGO_ENABLED:-1}"
 
+# host_arch prints the machine architecture reported by uname.
 host_arch() {
   uname -m
 }
 
+# can_lipo succeeds when Apple's tool for combining architecture builds is available.
 can_lipo() {
   command -v lipo >/dev/null 2>&1
 }
 
+# build_universal_binary builds arm64 and amd64 executables, combines them at $1,
+# and removes the temporary architecture builds after success.
 build_universal_binary() {
   local out="$1"
   local tmp_dir
@@ -46,6 +50,8 @@ build_universal_binary() {
   rm -rf "${tmp_dir}"
 }
 
+# build_single_arch_binary builds an executable at $1 for the host architecture,
+# rejecting hosts other than arm64 and x86_64.
 build_single_arch_binary() {
   local out="$1"
   local arch
@@ -63,6 +69,7 @@ build_single_arch_binary() {
   CGO_ENABLED=${CGO_ENABLED_VALUE} go build ${GOFLAGS} -ldflags "${LDFLAGS}" -o "${out}" "${CMD_PKG}"
 }
 
+# write_info_plist writes bundle metadata to $1 using the configured app settings.
 write_info_plist() {
   local plist_path="$1"
   cat >"${plist_path}" <<PLIST
@@ -99,6 +106,8 @@ write_info_plist() {
 PLIST
 }
 
+# make_icns_from_png converts the PNG at $1 into an icon at $2 via a temporary
+# iconset. Missing artwork or macOS conversion tools are reported and skipped.
 make_icns_from_png() {
   local png_path="$1"
   local icns_path="$2"
@@ -136,6 +145,8 @@ make_icns_from_png() {
   rm -rf "$(dirname "${iconset_dir}")"
 }
 
+# main recreates the configured unsigned app bundle with its metadata, executable,
+# and optional icon, preferring a universal executable when lipo is available.
 main() {
   cd "${PROJECT_ROOT}"
   mkdir -p "${MACOS_DIR}" "${RESOURCES_DIR}"

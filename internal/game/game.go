@@ -9,6 +9,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text"
 )
 
+// Game holds the player, entities, score, input state, and simulation timers.
+// Its Update, Draw, and Layout methods implement ebiten.Game.
 type Game struct {
 	player Entity
 	angle  float64
@@ -38,12 +40,14 @@ type Game struct {
 	last time.Time
 }
 
+// New returns a game initialized for a new round with the player at the center.
 func New() *Game {
 	g := &Game{}
 	g.reset()
 	return g
 }
 
+// reset starts a new round, clearing entities, score, power-ups, and input state.
 func (g *Game) reset() {
 	g.player = Entity{
 		kind: KindSquare,
@@ -78,9 +82,13 @@ func (g *Game) reset() {
 	g.last = time.Now()
 }
 
+// Update handles input and advances timers, spawning, movement, and collisions.
+// Pausing freezes the simulation; after game over, only restart and quit are
+// handled. Pressing Q returns ebiten.Termination to end the game loop.
 func (g *Game) Update() error {
 	now := time.Now()
 	dt := now.Sub(g.last).Seconds()
+	// Limit each simulation step so a delayed frame cannot cause a large jump.
 	if dt > 0.05 {
 		dt = 0.05
 	}
@@ -105,6 +113,7 @@ func (g *Game) Update() error {
 	my = clamp(my, 0, ScreenHeight-1)
 
 	mouseDown := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
+	// Trigger dash and pause on press transitions rather than while held.
 	clicked := mouseDown && !g.prevMouseBtn
 	g.prevMouseBtn = mouseDown
 
@@ -144,6 +153,7 @@ func (g *Game) Update() error {
 	g.player.y = float64(my)
 
 	if clicked && g.dashCDLeft <= 0 {
+		// Dash briefly protects against squares; movement still follows the mouse.
 		g.dashCDLeft = dashCooldown
 		g.dashInvLeft = dashInvDuration
 	}
@@ -160,10 +170,14 @@ func (g *Game) Update() error {
 	}
 
 	playerHit := g.player
+	// Collisions use a slightly smaller, axis-aligned square than the rotating art.
 	playerHit.size *= 0.90
 
+	// Capture protection for this collision pass; collected boosts affect later ticks.
 	inv := (g.invincibleLeft > 0) || (g.dashInvLeft > 0)
 
+	// Reuse the entity slice, removing consumed entities and those beyond the
+	// off-screen margin.
 	alive := g.ents[:0]
 	for _, e := range g.ents {
 		e.x += e.vx * dt
@@ -176,6 +190,7 @@ func (g *Game) Update() error {
 		switch e.kind {
 		case KindSquare:
 			if squareIntersectsSquare(playerHit, e) {
+				// Equal-sized squares are fatal too unless protection is active.
 				if inv || g.player.size > e.size {
 					g.score++
 					g.player.size += growthScale*e.size + growthFlat
@@ -186,6 +201,7 @@ func (g *Game) Update() error {
 			}
 
 		case KindCircleHazard:
+			// Black circles ignore both dash protection and boost invincibility.
 			if circleIntersectsSquare(e, playerHit) {
 				g.gameOver = true
 			}
@@ -207,6 +223,8 @@ func (g *Game) Update() error {
 	return nil
 }
 
+// Draw renders the entities, rotating player, protection ring, and HUD, followed
+// by the pause or game-over message when appropriate.
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{245, 245, 245, 255})
 
@@ -243,6 +261,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
+// Layout returns the fixed logical playfield size regardless of window size.
 func (g *Game) Layout(outsideW, outsideH int) (int, int) {
 	return ScreenWidth, ScreenHeight
 }

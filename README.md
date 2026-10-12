@@ -1,27 +1,34 @@
 
 # Squares
 
-**Squares** is a simple fun/addictive game where the player start as a tiny square whose mission is to eat other squares with a smaller size. The catch is that your square grows after consuming each square.  becomes more more difficult.
+**Squares** is a survival game: move a small square with the mouse, eat smaller squares to grow, and avoid fatal collisions as the difficulty increases.
 
 ## How to play
 
-Squares and circles spawn from the edges and drift toward you as the difficulty ramps up.
+You start as a rotating green square, 22 pixels wide, in a 640×480 playfield. Your square follows the mouse, with its center kept inside the playfield. Survive and eat as many squares as you can; there is no win condition.
 
-- You are the rotating green square in the center.
-- Move your square with the mouse.
-- Eat smaller squares to grow and increase your score.
-- Hitting a larger square ends the game.
+- **Smaller black squares**: eat them by touching them. Each square gives **1 point** and increases your side length by **5% of the eaten square's side length + 0.8 pixels**.
+- **Equal-sized or larger black squares**: touching them ends the game unless you have square protection from a dash or boost. While protected, you can eat squares of any size for the same score and growth rewards.
+- **Collision boundaries**: the player's hitbox is an axis-aligned square with 90% of its visible side length. Rotation is visual; it does not rotate the hitbox. Touching hitbox edges counts as a collision.
 
 ### Circles
 
-- **Green circle**: grants invincibility for a short time.
-- **Black circle**: instant death on contact.
+- **Teal circle**: grants **2.5 seconds** of protection against squares. Collecting another refreshes that timer; durations do not stack. Circles give no points or growth.
+- **Black circle**: instant death on contact, even during dash or boost protection.
+
+### Dash and difficulty
+
+- **Dash** grants **0.25 seconds** of protection against squares, with a **0.9-second cooldown** between activations. It does not increase movement speed; your square still follows the mouse.
+- Entities appear just outside a random edge, aimed roughly at your position when they spawn. They travel in straight lines afterward.
+- Difficulty rises with both active play time and score. Spawns become more frequent (from roughly **0.85 seconds** apart down to **0.25 seconds**), hazards become more likely, boosts become less likely, and large squares become more threatening.
+- After **six consecutive non-edible spawns**, the next spawn is forced to be a smaller square. Eating any square also resets that counter.
+- The HUD shows your score and remaining square-protection time. A ring around the player indicates active protection.
 
 ## Controls
 
 - **Mouse**: move
-- **Left click**: dash (short burst; has a cooldown)
-- **P** or **Esc**: pause / resume
+- **Left click**: activate dash protection (release and click again to reactivate once ready)
+- **P** or **Esc**: pause / resume; movement, spawns, difficulty, and countdown timers freeze while paused
 - **R**: restart (when game over)
 - **Q**: quit
 
