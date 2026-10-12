@@ -43,3 +43,35 @@ func circleIntersectsSquare(circle, square Entity) bool {
 	dy := circle.y - cy
 	return (dx*dx + dy*dy) <= r*r
 }
+
+// squareCollisionTime returns the first contact time of two moving axis-aligned
+// squares during duration. Relative-motion slabs include edge contact and avoid
+// tunneling when the mouse jumps across an entire square in one update.
+func squareCollisionTime(a, b Entity, duration float64) (float64, bool) {
+	enter, leave := 0.0, duration
+	half := (a.size + b.size) / 2
+	for _, axis := range [][2]float64{{a.x - b.x, a.vx - b.vx}, {a.y - b.y, a.vy - b.vy}} {
+		pos, velocity := axis[0], axis[1]
+		if velocity == 0 {
+			if math.Abs(pos) > half {
+				return 0, false
+			}
+			continue
+		}
+		first, last := (-half-pos)/velocity, (half-pos)/velocity
+		if first > last {
+			first, last = last, first
+		}
+		enter, leave = math.Max(enter, first), math.Min(leave, last)
+		if enter > leave {
+			return 0, false
+		}
+	}
+	return enter, enter <= duration && leave >= 0
+}
+
+// sweptSquareCollision reports overlap anywhere along two squares' linear paths.
+func sweptSquareCollision(a, b Entity, duration float64) bool {
+	_, hit := squareCollisionTime(a, b, duration)
+	return hit
+}

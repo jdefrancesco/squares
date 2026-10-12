@@ -1,35 +1,37 @@
 
 # Squares
 
-**Squares** is a survival game: move a small square with the mouse, eat smaller squares to grow, and avoid fatal collisions as the difficulty increases.
+**Squares** is a mouse-only survival game: eat, grow, dodge, and beat your personal best. There are no power-ups or dash controls to learn.
 
 ## How to play
 
-You start as a rotating green square, 22 pixels wide, in a 640×480 playfield. Your square follows the mouse, with its center kept inside the playfield. Survive and eat as many squares as you can; there is no win condition.
+You start as a rotating green square, 22 pixels wide, in a 640×480 playfield. Your square follows the mouse and stays inside the playfield. Survive and eat as many squares as you can; there is no win condition.
 
-- **Smaller black squares**: eat them by touching them. Each square gives **1 point** and increases your side length by **5% of the eaten square's side length + 0.8 pixels**.
-- **Equal-sized or larger black squares**: touching them ends the game unless you have square protection from a dash or boost. While protected, you can eat squares of any size for the same score and growth rewards.
-- **Collision boundaries**: the player's hitbox is an axis-aligned square with 90% of its visible side length. Rotation is visual; it does not rotate the hitbox. Touching hitbox edges counts as a collision.
+- **Amber squares: eat.** Each smaller square gives **1 point**, grows the player, and triggers a brief pulse, "+1", and chime.
+- **Dark squares: avoid.** Equal-sized or larger squares end the round on contact. A danger square turns amber when you grow larger than it.
+- **Growth tapers.** The initial reward is **5% of the eaten square's side length + 0.8 pixels**, scaled down as your size approaches **64 pixels**. You can keep scoring without growing beyond that limit.
+- **Rotation is visual.** Your collision box is an axis-aligned square at 90% of the player's side length. Edge contact counts, and moving the mouse quickly cannot skip a danger square.
 
-### Circles
+### Pressure and fair spawning
 
-- **Teal circle**: grants **2.5 seconds** of protection against squares. Collecting another refreshes that timer; durations do not stack. Circles give no points or growth.
-- **Black circle**: instant death on contact, even during dash or boost protection.
+- The opening two seconds spawn only food. Difficulty then rises with active time and score, reaching full pressure after `75 - 1.5 × score` seconds of active play.
+- Spawn intervals decrease from roughly **0.8 seconds** to **0.32 seconds**, while squares get faster and dangerous squares become more common.
+- Squares enter from the edges and head toward your position at spawn time. They travel in straight lines afterward. Small edge markers show where incoming squares will enter.
+- New squares provide at least **0.85 seconds** before they can hit your current position. You can still collide sooner by moving toward one.
+- Spawning limits the number of active dangers and checks nearby escape routes over the next **1.5 seconds**. If another threat would block those routes, it spawns food instead. These safeguards do not protect you from moving into existing danger.
+- After **two consecutive danger spawns**, the next spawn is food. Eating a square also resets that counter.
+- The HUD shows **Score** and **Best**. Death shows the result immediately; **one click** starts another round.
 
-### Dash and difficulty
+### Personal best
 
-- **Dash** grants **0.25 seconds** of protection against squares, with a **0.9-second cooldown** between activations. It does not increase movement speed; your square still follows the mouse.
-- Entities appear just outside a random edge, aimed roughly at your position when they spawn. They travel in straight lines afterward.
-- Difficulty rises with both active play time and score. Spawns become more frequent (from roughly **0.85 seconds** apart down to **0.25 seconds**), hazards become more likely, boosts become less likely, and large squares become more threatening.
-- After **six consecutive non-edible spawns**, the next spawn is forced to be a smaller square. Eating any square also resets that counter.
-- The HUD shows your score and remaining square-protection time. A ring around the player indicates active protection.
+Your best score survives restarts and is saved when a round ends or the window closes. The record is stored in `Squares/best-score.json` under your OS user configuration directory (on macOS, `~/Library/Application Support/Squares/best-score.json`). If storage is unavailable, you can still play and retain a best score for the current session.
 
 ## Controls
 
 - **Mouse**: move
-- **Left click**: activate dash protection (release and click again to reactivate once ready)
+- **Left click**: retry after game over (release a held click first)
 - **P** or **Esc**: pause / resume; movement, spawns, difficulty, and countdown timers freeze while paused
-- **R**: restart (when game over)
+- **R**: retry after game over
 - **Q**: quit
 
 ## Run / Build

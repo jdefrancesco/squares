@@ -14,10 +14,12 @@ func main() {
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
 	ebiten.SetWindowTitle("Squares")
 
-	if err := ebiten.RunGame(game.New()); err != nil {
-		if err == ebiten.Termination {
-			return
-		}
+	g := game.New()
+	err := ebiten.RunGame(g)
+	if closeErr := g.Close(); closeErr != nil {
+		log.Printf("Could not save personal best: %v", closeErr)
+	}
+	if err != nil && err != ebiten.Termination {
 		log.Fatal(err)
 	}
 }

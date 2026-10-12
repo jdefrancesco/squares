@@ -3,88 +3,67 @@ package game
 import (
 	"fmt"
 	"image/color"
-	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/image/font/basicfont"
 )
 
-var (
-	hudFace = basicfont.Face7x13
-)
+var hudFace = basicfont.Face7x13
 
-type hudLine struct {
-	label string
-	value string
+// drawHUD displays the current score and personal best, briefly tinting the
+// score after eating to reinforce its increase.
+func drawHUD(screen *ebiten.Image, x, y, score, best int, pulse float64) {
+	scoreCol := color.RGBA{35, 35, 35, 255}
+	if pulse > 0 {
+		scoreCol = color.RGBA{155, 99, 13, 255}
+	}
+	text.Draw(screen, fmt.Sprintf("Score: %d", score), hudFace, x+10, y+17, scoreCol)
+	text.Draw(screen, fmt.Sprintf("Best:  %d", best), hudFace, x+10, y+34, color.RGBA{95, 100, 110, 255})
 }
 
-// drawHUD displays the score and remaining square-protection time, in seconds,
-// with padding from the supplied top-left position.
-func drawHUD(screen *ebiten.Image, x, y int, score int, invLeft float64) {
-	lines := []hudLine{
-		{label: "Score:", value: fmt.Sprintf("%d", score)},
-		{label: "Invincible:", value: fmt.Sprintf("%.1fs", math.Max(0, invLeft))},
-	}
-
-	lineHeight := hudFace.Metrics().Height.Ceil()
-	ascent := hudFace.Metrics().Ascent.Ceil()
-
-	pad := 10
-
-	labelCol := color.RGBA{5, 5, 5, 255}
-	valueCol := color.RGBA{35, 35, 35, 255}
-	shadowCol := color.RGBA{0, 0, 0, 70}
-
-	baseY := y + pad + ascent
-	for i, line := range lines {
-		if line.label == "" && line.value == "" {
-			continue
-		}
-
-		ly := baseY + i*lineHeight
-		x0 := x + pad
-
-		// Label: simulate bold by drawing twice with a 1px offset.
-		text.Draw(screen, line.label, hudFace, x0+1, ly+1, shadowCol)
-		text.Draw(screen, line.label, hudFace, x0, ly, labelCol)
-		text.Draw(screen, line.label, hudFace, x0+1, ly, labelCol)
-
-		if line.value != "" {
-			labelW := text.BoundString(hudFace, line.label+" ").Dx()
-			text.Draw(screen, line.value, hudFace, x0+labelW, ly, valueCol)
-		}
-	}
+// drawLegend explains the two square colors and the mouse and pause controls.
+func drawLegend(screen *ebiten.Image) {
+	y := ScreenHeight - 18
+	drawSquareAA(screen, 26, float64(y-4), 8, foodColor)
+	text.Draw(screen, "EAT", hudFace, 37, y, color.RGBA{110, 80, 25, 255})
+	drawSquareAA(screen, 85, float64(y-4), 10, dangerColor)
+	text.Draw(screen, "AVOID", hudFace, 98, y, dangerColor)
+	text.Draw(screen, "Move mouse | P / Esc: pause", hudFace, ScreenWidth-205, y, color.RGBA{95, 100, 110, 255})
 }
 
-// drawTopPopup centers msg near the top of the screen and fades it as left
-// seconds count down from total. Empty or expired messages are not drawn.
-func drawTopPopup(screen *ebiten.Image, msg string, left, total float64) {
-	if msg == "" || left <= 0 || total <= 0 {
-		return
-	}
+// drawCenteredText draws one line with a baseline at y, scaling around the
+// logical center so prompts remain aligned as their text changes.
+func drawCenteredText(screen *ebiten.Image, msg string, y int, scale float64, c color.Color) {
+	bounds := text.BoundString(hudFace, msg)
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(scale, scale)
+	op.GeoM.Translate((ScreenWidth-float64(bounds.Dx())*scale)/2, float64(y))
+	op.ColorScale.ScaleWithColor(c)
+	text.DrawWithOptions(screen, msg, hudFace, op)
+}
 
-	alpha := left / total
-	if alpha > 1 {
-		alpha = 1
-	}
-
-	b := text.BoundString(hudFace, msg)
-	x := (ScreenWidth - b.Dx()) / 2
-	y := 24
-
-	labelCol := color.RGBA{20, 20, 20, uint8(235 * alpha)}
-	shadowCol := color.RGBA{0, 0, 0, uint8(90 * alpha)}
-	text.Draw(screen, msg, hudFace, x+1, y+1, shadowCol)
-	text.Draw(screen, msg, hudFace, x, y, labelCol)
+// drawDimOverlay shades the playfield using the shared texture.
+func drawDimOverlay(screen *ebiten.Image, alpha uint8) {
+	drawSquareRect(screen, 0, 0, ScreenWidth, ScreenHeight, color.RGBA{0, 0, 0, alpha})
 }
 
 // drawPauseOverlay dims the playfield and displays the pause and resume prompt.
 func drawPauseOverlay(screen *ebiten.Image) {
-	overlay := ebiten.NewImage(ScreenWidth, ScreenHeight)
-	overlay.Fill(color.RGBA{0, 0, 0, 70})
-	screen.DrawImage(overlay, nil)
+	drawDimOverlay(screen, 160)
+	drawCenteredText(screen, "PAUSED", ScreenHeight/2-10, 2, color.White)
+	drawCenteredText(screen, "Press P or Esc to resume", ScreenHeight/2+22, 1, color.White)
+}
 
-	text.Draw(screen, "PAUSED", hudFace, ScreenWidth/2-21, ScreenHeight/2-8, color.RGBA{255, 255, 255, 230})
-	text.Draw(screen, "Press P or Esc to resume", hudFace, ScreenWidth/2-77, ScreenHeight/2+12, color.RGBA{255, 255, 255, 220})
+// drawGameOverOverlay shows the round result, highlights a new personal best,
+// and offers a one-click retry without an additional menu.
+func drawGameOverOverlay(screen *ebiten.Image, score, best int, newBest bool) {
+	drawDimOverlay(screen, 185)
+	drawCenteredText(screen, "GAME OVER", ScreenHeight/2-44, 2, color.White)
+	drawCenteredText(screen, fmt.Sprintf("Score: %d    Best: %d", score, best), ScreenHeight/2-12, 1, color.White)
+	if newBest {
+		drawCenteredText(screen, "NEW BEST!", ScreenHeight/2+12, 1, foodColor)
+	}
+	drawCenteredText(screen, "Click to try again", ScreenHeight/2+45, 1, color.White)
+	drawCenteredText(screen, "R: retry   Q: quit", ScreenHeight/2+67, 1, color.RGBA{205, 210, 220, 255})
 }
